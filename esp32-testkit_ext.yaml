@@ -1,0 +1,235 @@
+# configuration for ESP32 Testkit
+# 
+substitutions:
+  device_name: esp32-testkit
+  ui: 100ms # Update Intervall for Window-Size
+  ws: '10' # Window Size -> 1s 
+  se: '5' # send every -> send every 500ms
+  ui1: 1s  # Update Intervall for Template-Sensors
+
+esphome:
+  name: ${device_name}
+  platform: ESP32
+  board: lolin32
+  on_boot:
+    then:
+      - switch.turn_on: o1
+
+wifi:
+  ssid: "xxxxxx"
+  password: "xxxxxx"
+
+  ap:
+    ssid: ${device_name}_hotspot
+    password: "12345678"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable OTA updates
+ota:
+  safe_mode: true
+ 
+# Enable Web server (optional).
+web_server:
+  port: 80
+
+text_sensor:
+  # Expose ESPHome version as sensor.
+  - platform: version
+    name: ${device_name}_ESPHome_version
+  # Expose WiFi information as sensors.
+  - platform: wifi_info
+    ip_address:
+      name: ${device_name}_IP
+    ssid:
+      name: ${device_name}_SSID
+    bssid:
+      name: ${device_name}_BSSID
+  - platform: template
+    name: ${device_name}_up_hr
+    id: uptime_human
+    icon: mdi:clock-start
+
+# Sensors with general information.
+sensor:
+  # Uptime sensor
+  - platform: uptime
+    name: ${device_name}_uptime
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
+  # WiFi Signal sensor.
+  - platform: wifi_signal
+    name: ${device_name}_wifi_signal
+    update_interval: 60s
+
+  - platform: adc
+    pin: GPIO39
+    id: v39
+    name: "V1 bis 12V"
+    unit_of_measurement: "V"    
+    accuracy_decimals: 3
+    attenuation: auto
+    update_interval: ${ui}
+    filters:
+      - sliding_window_moving_average:
+          window_size: ${ws}
+          send_every: ${se}
+      - offset: 0
+      - multiply: 4.9393939  # 1/ 33/153
+
+  - platform: adc
+    pin: GPIO36
+    id: v36
+    name: "V2 bis 12V"
+    unit_of_measurement: "V"    
+    accuracy_decimals: 3
+    attenuation: auto
+    update_interval: ${ui}
+    filters:
+      - sliding_window_moving_average:
+          window_size: ${ws}
+          send_every: ${se}
+      - offset: 0
+      - multiply: 4.9393939  # 1/ 33/153
+
+  - platform: adc
+    pin: GPIO35
+    id: v35
+    name: "V3 bis 12V"
+    unit_of_measurement: "V"    
+    accuracy_decimals: 3
+    attenuation: auto
+    update_interval: ${ui}
+    filters:
+      - sliding_window_moving_average:
+          window_size: ${ws}
+          send_every: ${se}
+      - offset: 0
+      - multiply: 4.9393939  # 1/ 33/153
+
+  - platform: adc
+    pin: GPIO34
+    id: v34
+    name: "V4 bis 12V"
+    unit_of_measurement: "V"    
+    accuracy_decimals: 3
+    attenuation: auto
+    update_interval: ${ui}
+    filters:
+      - sliding_window_moving_average:
+          window_size: ${ws}
+          send_every: ${se}
+      - offset: 0
+      - multiply: 4.9393939  # 1/ 33/153
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO12
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "I1"
+    id: i1
+
+  - platform: gpio
+    pin:
+      number: GPIO13
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "I2"
+    id: i2
+
+  - platform: gpio
+    pin:
+      number: GPIO14
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "I3"
+    id: i3
+
+  - platform: gpio
+    pin:
+      number: GPIO15
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "I4"
+    id: i4
+
+switch:
+  - platform: gpio
+    id: o1
+    name: "O1"
+    restore_mode: ALWAYS_OFF 
+    pin:
+      number: GPIO21
+      inverted: false
+    on_turn_on:
+      - delay: 2s
+      - switch.turn_off: o1
+    on_turn_off:
+      - delay: 2s
+      - switch.turn_on: o1
+    
+  - platform: gpio
+    id: o2
+    name: "O2"
+    restore_mode: ALWAYS_OFF 
+    pin:
+      number: GPIO22
+      inverted: false
+
+  - platform: gpio
+    id: o3
+    name: "O3"
+    restore_mode: ALWAYS_OFF 
+    pin:
+      number: GPIO23
+      inverted: false
+
+  - platform: gpio
+    id: o4
+    name: "O4"
+    restore_mode: ALWAYS_OFF 
+    pin:
+      number: GPIO25
+      inverted: false
+
+output:
+  - platform: esp32_dac
+    pin: GPIO26
+    id: dac_output
+
+fan:
+  - platform: speed
+    output: dac_output
+    name: "DAC"
+
