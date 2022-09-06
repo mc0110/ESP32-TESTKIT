@@ -30,8 +30,12 @@ My ESP32-DEVKIT, which I would like to present here, therefore has the following
 - PGM-socket (shelly-compatible)
 - RESET button and GPIO00 button
 - 4x 15V ADC-ports (with voltage dividers)
+  (V1:GPIO39, V2:GPIO36, V3: GPIO35, V4: GPIO34)
 - 4x digital output (LED-controlled) vs. GND-level
+  (O1:GPIO21, O2: GPIO22, O3: GPIO23, O4: GPIO25)
 - 4x digital input (LED-controlled) vs. GND-level
+  (I1:GPIO12, I2: GPIO13, I3: GPIO14, I4: GPIO15)
+
 - all ESP-PINs available on the breadboard
 
 Circuit diagram and board are realised in KICAD V6. The board is 2-layered.
